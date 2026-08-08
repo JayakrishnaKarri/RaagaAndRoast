@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/with-delivery-instructions?page=0&size=20"
+method: GET
+headers:
+  Authorization: Bearer {{staffToken}}
+queryParams:
+  page: "0"
+  size: "20"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has addresses with delivery instructions", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          pm.expect(jsonData).to.have.property('totalElements');
+      });
+    language: text/javascript
+order: 30000

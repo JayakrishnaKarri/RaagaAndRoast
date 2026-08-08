@@ -1,0 +1,30 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "username": "customer1",
+        "password": "SecurePass123!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has JWT token", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('accessToken');
+          pm.expect(jsonData).to.have.property('tokenType');
+          pm.expect(jsonData).to.have.property('expiresIn');
+          
+          // Store token for subsequent requests
+          pm.environment.set('customerToken', jsonData.accessToken);
+      });
+    language: text/javascript
+order: 5000

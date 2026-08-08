@@ -1,0 +1,34 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/profile"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "firstName": "John",
+        "lastName": "Doe",
+        "phoneNumber": "+1234567890",
+        "dateOfBirth": "1990-01-15",
+        "marketingConsent": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Customer profile created", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('firstName');
+          pm.expect(jsonData).to.have.property('lastName');
+          
+          // Store customer ID for subsequent requests
+          pm.environment.set('customerId', jsonData.id);
+      });
+    language: text/javascript
+order: 8000

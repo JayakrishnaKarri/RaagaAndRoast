@@ -1,0 +1,23 @@
+$kind: http-request
+name: ✅ Get Menu Items by Category with Availability Filter - Success
+url: "{{baseUrl}}/api/menu-items/category/{{categoryId}}?availableOnly=true&page=0&size=20"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  availableOnly: "true"
+  page: "0"
+  size: "20"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has category items with availability filter", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+      });
+    language: text/javascript
+order: 19000

@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/birthdays/1990-01-15"
+method: GET
+headers:
+  Authorization: Bearer {{staffToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has customers with specific birth date", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+      });
+    language: text/javascript
+order: 17000

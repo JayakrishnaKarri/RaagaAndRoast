@@ -1,0 +1,356 @@
+package com.raagaandroast.order.repository;
+
+import com.raagaandroast.order.entity.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Repository interface for OrderItem entity operations.
+ * 
+ * This repository focuses on order item analytics and reporting:
+ * - Menu item popularity tracking
+ * - Revenue analysis by item
+ * - Price change impact analysis
+ * - Order item performance metrics
+ * 
+ * Design Decisions:
+ * - Extends JpaRepository for basic CRUD operations
+ * - Custom queries for business analytics
+ * - Performance-focused queries with proper indexing
+ * - Revenue and popularity tracking capabilities
+ * 
+ * Interview Points:
+ * - Why separate repository? OrderItem has distinct query patterns
+ * - Why analytics queries? Business needs item performance data
+ * - Why price snapshot queries? Track pricing impact over time
+ * - Why aggregation queries? Reporting and dashboard requirements
+ * 
+ * @author RaagaAndRoast Development Team
+ */
+public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
+
+        // ================================================================
+        // Basic Finder Methods
+        // ================================================================
+
+        /**
+         * Find order items by order ID.
+         * 
+         * @param orderId the order ID
+         * @return list of order items for the order
+         */
+        List<OrderItem> findByOrderIdOrderByCreatedAt(UUID orderId);
+
+        /**
+         * Find order items by menu item ID.
+         * 
+         * Used to track which orders contain a specific menu item.
+         * 
+         * @param menuItemId the menu item ID
+         * @return list of order items for the menu item
+         */
+        List<OrderItem> findByMenuItemId(UUID menuItemId);
+
+        /**
+         * Find order items by menu item ID within date range.
+         * 
+         * @param menuItemId the menu item ID
+         * @param startDate  start of date range
+         * @param endDate    end of date range
+         * @return list of order items for the menu item in date range
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "WHERE oi.menuItem.id = :menuItemId " +
+                        "AND oi.createdAt BETWEEN :startDate AND :endDate " +
+                        "ORDER BY oi.createdAt DESC")
+        List<OrderItem> findByMenuItemIdAndDateRange(
+                        @Param("menuItemId") UUID menuItemId,
+                        @Param("startDate") LocalDateTime startDate,
+                        @Param("endDate") LocalDateTime endDate);
+
+        // ================================================================
+        // Analytics and Reporting Queries
+        // ================================================================
+
+        /**
+         * Find most popular menu items by order count.
+         * 
+         * Returns menu items ordered most frequently.
+         * Used for menu optimization and inventory planning.
+         * 
+         * @param limit maximum number of items to return
+         * @return list of menu item IDs and order counts
+         */
+        @Query("SELECT oi.menuItem.id, oi.menuItemName, COUNT(oi) as orderCount, SUM(oi.quantity) as totalQuantity " +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status IN ('COMPLETED', 'READY', 'PREPARING', 'CONFIRMED') " +
+                        "GROUP BY oi.menuItem.id, oi.menuItemName " +
+                        "ORDER BY orderCount DESC " +
+                        "LIMIT :limit")
+        List<Object[]> findMostPopularMenuItems(@Param("limit") int limit);
+
+        /**
+         * Find highest revenue generating menu items.
+         * 
+         * Returns menu items that generate the most revenue.
+         * Critical for business decision making.
+         * 
+         * @param limit maximum number of items to return
+         * @return list of menu item IDs and revenue amounts
+         */
+        @Query("SELECT oi.menuItem.id, oi.menuItemName, SUM(oi.subtotal) as totalRevenue, COUNT(oi) as orderCount " +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED' " +
+                        "GROUP BY oi.menuItem.id, oi.menuItemName " +
+                        "ORDER BY totalRevenue DESC " +
+                        "LIMIT :limit")
+        List<Object[]> findHighestRevenueMenuItems(@Param("limit") int limit);
+
+        /**
+         * Calculate total revenue for a menu item.
+         * 
+         * @param menuItemId the menu item ID
+         * @return total revenue generated by the menu item
+         */
+        @Query("SELECT COALESCE(SUM(oi.subtotal), 0) FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.menuItem.id = :menuItemId " +
+                        "AND o.status = 'COMPLETED'")
+        BigDecimal calculateTotalRevenueForMenuItem(@Param("menuItemId") UUID menuItemId);
+
+        /**
+         * Calculate total quantity sold for a menu item.
+         * 
+         * @param menuItemId the menu item ID
+         * @return total quantity sold
+         */
+        @Query("SELECT COALESCE(SUM(oi.quantity), 0) FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.menuItem.id = :menuItemId " +
+                        "AND o.status = 'COMPLETED'")
+        Long calculateTotalQuantitySoldForMenuItem(@Param("menuItemId") UUID menuItemId);
+
+        /**
+         * Find menu items with price changes.
+         * 
+         * Identifies order items where the current menu item price
+         * differs from the price at time of ordering.
+         * 
+         * @return list of order items with price differences
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "JOIN oi.menuItem mi " +
+                        "WHERE oi.unitPrice != mi.price " +
+                        "ORDER BY oi.createdAt DESC")
+        List<OrderItem> findOrderItemsWithPriceChanges();
+
+        /**
+         * Calculate average order item value.
+         * 
+         * @return average subtotal per order item
+         */
+        @Query("SELECT AVG(oi.subtotal) FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED'")
+        BigDecimal calculateAverageOrderItemValue();
+
+        /**
+         * Find order items by category.
+         * 
+         * Groups order items by category for analysis.
+         * 
+         * @param categoryName the category name
+         * @return list of order items in the category
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.categoryName = :categoryName " +
+                        "AND o.status = 'COMPLETED' " +
+                        "ORDER BY oi.createdAt DESC")
+        List<OrderItem> findByCategory(@Param("categoryName") String categoryName);
+
+        /**
+         * Calculate revenue by category.
+         * 
+         * @return list of category names and revenue amounts
+         */
+        @Query("SELECT oi.categoryName, SUM(oi.subtotal) as categoryRevenue " +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED' " +
+                        "AND oi.categoryName IS NOT NULL " +
+                        "GROUP BY oi.categoryName " +
+                        "ORDER BY categoryRevenue DESC")
+        List<Object[]> calculateRevenueByCategory();
+
+        // ================================================================
+        // Time-based Analytics
+        // ================================================================
+
+        /**
+         * Find order items within date range.
+         * 
+         * @param startDate start of date range
+         * @param endDate   end of date range
+         * @return list of order items in date range
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED' " +
+                        "AND oi.createdAt BETWEEN :startDate AND :endDate " +
+                        "ORDER BY oi.createdAt DESC")
+        List<OrderItem> findByDateRange(
+                        @Param("startDate") LocalDateTime startDate,
+                        @Param("endDate") LocalDateTime endDate);
+
+        /**
+         * Calculate daily revenue from order items.
+         * 
+         * @param days number of days to look back
+         * @return list of dates and revenue amounts
+         */
+        @Query("SELECT DATE(oi.createdAt) as orderDate, SUM(oi.subtotal) as dailyRevenue " +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED' " +
+                        "AND oi.createdAt >= :startDate " +
+                        "GROUP BY DATE(oi.createdAt) " +
+                        "ORDER BY orderDate DESC")
+        List<Object[]> calculateDailyRevenue(@Param("startDate") LocalDateTime startDate);
+
+        /**
+         * Find trending menu items (increasing in popularity).
+         * 
+         * Compares recent orders with historical data.
+         * 
+         * @param recentDays     number of recent days to compare
+         * @param historicalDays number of historical days to compare
+         * @return list of trending menu items
+         */
+        @Query("SELECT oi.menuItem.id, oi.menuItemName, " +
+                        "COUNT(CASE WHEN oi.createdAt >= :recentStart THEN 1 END) as recentCount, " +
+                        "COUNT(CASE WHEN oi.createdAt < :recentStart AND oi.createdAt >= :historicalStart THEN 1 END) as historicalCount "
+                        +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED' " +
+                        "AND oi.createdAt >= :historicalStart " +
+                        "GROUP BY oi.menuItem.id, oi.menuItemName " +
+                        "HAVING COUNT(CASE WHEN oi.createdAt >= :recentStart THEN 1 END) > COUNT(CASE WHEN oi.createdAt < :recentStart AND oi.createdAt >= :historicalStart THEN 1 END) "
+                        +
+                        "ORDER BY (COUNT(CASE WHEN oi.createdAt >= :recentStart THEN 1 END) - COUNT(CASE WHEN oi.createdAt < :recentStart AND oi.createdAt >= :historicalStart THEN 1 END)) DESC")
+        List<Object[]> findTrendingMenuItems(
+                        @Param("recentStart") LocalDateTime recentStart,
+                        @Param("historicalStart") LocalDateTime historicalStart);
+
+        // ================================================================
+        // Performance and Optimization Queries
+        // ================================================================
+
+        /**
+         * Find order items with special instructions.
+         * 
+         * Used to analyze customization patterns.
+         * 
+         * @return list of order items with special instructions
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "WHERE oi.specialInstructions IS NOT NULL " +
+                        "AND oi.specialInstructions != '' " +
+                        "ORDER BY oi.createdAt DESC")
+        List<OrderItem> findOrderItemsWithSpecialInstructions();
+
+        /**
+         * Calculate average quantity per order item.
+         * 
+         * @return average quantity ordered per item
+         */
+        @Query("SELECT AVG(oi.quantity) FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE o.status = 'COMPLETED'")
+        Double calculateAverageQuantityPerOrderItem();
+
+        /**
+         * Find order items with high quantities.
+         * 
+         * Identifies bulk orders or popular items.
+         * 
+         * @param threshold minimum quantity threshold
+         * @return list of high-quantity order items
+         */
+        @Query("SELECT oi FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.quantity >= :threshold " +
+                        "AND o.status = 'COMPLETED' " +
+                        "ORDER BY oi.quantity DESC")
+        List<OrderItem> findHighQuantityOrderItems(@Param("threshold") int threshold);
+
+        /**
+         * Count distinct customers who ordered a menu item.
+         * 
+         * @param menuItemId the menu item ID
+         * @return number of unique customers who ordered the item
+         */
+        @Query("SELECT COUNT(DISTINCT o.customer.id) FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.menuItem.id = :menuItemId " +
+                        "AND o.status = 'COMPLETED'")
+        Long countDistinctCustomersForMenuItem(@Param("menuItemId") UUID menuItemId);
+
+        // ================================================================
+        // Business Intelligence Queries
+        // ================================================================
+
+        /**
+         * Find menu items that are frequently ordered together.
+         * 
+         * Identifies items that appear in the same orders.
+         * Used for recommendation systems and menu optimization.
+         * 
+         * @param menuItemId the reference menu item ID
+         * @param limit      maximum number of related items to return
+         * @return list of frequently co-ordered menu items
+         */
+        @Query("SELECT oi2.menuItem.id, oi2.menuItemName, COUNT(*) as coOrderCount " +
+                        "FROM OrderItem oi1 " +
+                        "JOIN OrderItem oi2 ON oi1.order.id = oi2.order.id " +
+                        "WHERE oi1.menuItem.id = :menuItemId " +
+                        "AND oi2.menuItem.id != :menuItemId " +
+                        "GROUP BY oi2.menuItem.id, oi2.menuItemName " +
+                        "ORDER BY coOrderCount DESC " +
+                        "LIMIT :limit")
+        List<Object[]> findFrequentlyOrderedTogether(
+                        @Param("menuItemId") UUID menuItemId,
+                        @Param("limit") int limit);
+
+        /**
+         * Calculate menu item performance metrics.
+         * 
+         * Comprehensive metrics for business analysis.
+         * 
+         * @param menuItemId the menu item ID
+         * @return performance metrics array
+         */
+        @Query("SELECT " +
+                        "COUNT(oi) as totalOrders, " +
+                        "SUM(oi.quantity) as totalQuantity, " +
+                        "SUM(oi.subtotal) as totalRevenue, " +
+                        "AVG(oi.quantity) as avgQuantityPerOrder, " +
+                        "AVG(oi.subtotal) as avgRevenuePerOrder, " +
+                        "MIN(oi.unitPrice) as minPrice, " +
+                        "MAX(oi.unitPrice) as maxPrice, " +
+                        "AVG(oi.unitPrice) as avgPrice " +
+                        "FROM OrderItem oi " +
+                        "JOIN oi.order o " +
+                        "WHERE oi.menuItem.id = :menuItemId " +
+                        "AND o.status = 'COMPLETED'")
+        Object[] calculateMenuItemPerformanceMetrics(@Param("menuItemId") UUID menuItemId);
+}

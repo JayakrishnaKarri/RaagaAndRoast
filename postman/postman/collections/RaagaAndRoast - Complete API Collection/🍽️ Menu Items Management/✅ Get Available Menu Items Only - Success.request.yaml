@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items?availableOnly=true&page=0&size=20&sort=name,asc"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  availableOnly: "true"
+  page: "0"
+  size: "20"
+  sort: name,asc
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has only available items", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          if (jsonData.content.length > 0) {
+              jsonData.content.forEach(function(item) {
+                  pm.expect(item.available).to.be.true;
+              });
+          }
+      });
+    language: text/javascript
+order: 17000

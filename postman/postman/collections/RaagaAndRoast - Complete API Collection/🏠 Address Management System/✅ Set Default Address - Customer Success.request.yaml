@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/{{addressId}}/set-default"
+method: PATCH
+headers:
+  Authorization: Bearer {{customerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Address set as default", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.isDefault).to.be.true;
+      });
+    language: text/javascript
+order: 7000

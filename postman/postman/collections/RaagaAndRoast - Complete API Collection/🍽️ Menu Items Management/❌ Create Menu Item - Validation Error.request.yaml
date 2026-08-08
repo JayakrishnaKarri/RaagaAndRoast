@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items"
+method: POST
+headers:
+  Authorization: Bearer {{managerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "",
+        "description": "",
+        "price": -1.00
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Response has validation errors", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('message');
+      });
+    language: text/javascript
+order: 11000

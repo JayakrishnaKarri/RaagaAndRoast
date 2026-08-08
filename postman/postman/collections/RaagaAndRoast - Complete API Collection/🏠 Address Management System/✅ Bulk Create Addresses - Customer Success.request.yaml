@@ -1,0 +1,43 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/bulk"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    [
+        {
+            "street": "456 Work Avenue",
+            "city": "New York",
+            "state": "NY",
+            "postalCode": "10002",
+            "country": "USA",
+            "type": "WORK",
+            "isDefault": false
+        },
+        {
+            "street": "789 Other Street",
+            "city": "Brooklyn",
+            "state": "NY",
+            "postalCode": "11201",
+            "country": "USA",
+            "type": "OTHER",
+            "isDefault": false
+        }
+    ]
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Multiple addresses created", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+          pm.expect(jsonData.length).to.be.greaterThan(1);
+      });
+    language: text/javascript
+order: 12000

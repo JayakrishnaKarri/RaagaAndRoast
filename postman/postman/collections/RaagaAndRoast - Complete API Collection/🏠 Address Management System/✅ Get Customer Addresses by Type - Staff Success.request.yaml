@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/customer/{{customerId}}/type/HOME"
+method: GET
+headers:
+  Authorization: Bearer {{staffToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has addresses of specified type", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+      });
+    language: text/javascript
+order: 24000

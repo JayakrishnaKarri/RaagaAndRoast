@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/refresh"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "refreshToken": "{{refreshToken}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has new JWT token", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('accessToken');
+          pm.expect(jsonData).to.have.property('tokenType');
+          pm.expect(jsonData).to.have.property('expiresIn');
+      });
+    language: text/javascript
+order: 7000

@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items/search?query="
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  query: ""
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Response has validation error", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('message');
+      });
+    language: text/javascript
+order: 25000

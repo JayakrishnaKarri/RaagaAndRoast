@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/search/postal-code?postalCode=10001"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  postalCode: "10001"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has search results", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+      });
+    language: text/javascript
+order: 10000

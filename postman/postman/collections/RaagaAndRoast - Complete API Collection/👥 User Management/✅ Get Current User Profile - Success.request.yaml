@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/profile"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has user profile", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('username');
+          pm.expect(jsonData).to.have.property('email');
+          pm.expect(jsonData).to.not.have.property('password');
+      });
+    language: text/javascript
+order: 8000

@@ -1,0 +1,34 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "username": "admin1",
+        "email": "admin1@raagaandroast.com",
+        "password": "AdminPass123!",
+        "firstName": "Admin",
+        "lastName": "User",
+        "phoneNumber": "+1234567891",
+        "dateOfBirth": "1985-01-15",
+        "role": "ADMIN"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has admin user data", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('username');
+          pm.expect(jsonData).to.have.property('email');
+          pm.expect(jsonData).to.not.have.property('password');
+      });
+    language: text/javascript
+order: 2000

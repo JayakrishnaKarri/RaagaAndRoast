@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/customer/{{anotherCustomerId}}"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 403", function () {
+          pm.response.to.have.status(403);
+      });
+    language: text/javascript
+order: 37000

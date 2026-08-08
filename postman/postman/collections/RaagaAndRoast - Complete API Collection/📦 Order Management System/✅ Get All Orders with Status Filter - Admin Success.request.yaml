@@ -1,0 +1,29 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders/admin?status=PENDING&page=0&size=50&sort=createdAt,desc"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+queryParams:
+  status: PENDING
+  page: "0"
+  size: "50"
+  sort: createdAt,desc
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has filtered orders", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          pm.expect(jsonData).to.have.property('totalElements');
+          if (jsonData.content.length > 0) {
+              jsonData.content.forEach(function(order) {
+                  pm.expect(order.status).to.equal('PENDING');
+              });
+          }
+      });
+    language: text/javascript
+order: 24000

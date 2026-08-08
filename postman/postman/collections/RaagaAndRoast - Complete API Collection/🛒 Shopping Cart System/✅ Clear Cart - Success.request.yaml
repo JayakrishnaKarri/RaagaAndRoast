@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/{{customerId}}/cart"
+method: DELETE
+headers:
+  Authorization: Bearer {{customerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Cart cleared successfully", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.items).to.be.empty;
+          pm.expect(jsonData.totalAmount).to.equal(0);
+      });
+    language: text/javascript
+order: 5000

@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/{{addressId}}"
+method: PUT
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "street": "123 Updated Main Street",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10001",
+        "country": "USA",
+        "type": "HOME",
+        "isDefault": true,
+        "deliveryInstructions": "Updated delivery instructions"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Address updated successfully", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('street');
+          pm.expect(jsonData.street).to.include('Updated');
+      });
+    language: text/javascript
+order: 4000

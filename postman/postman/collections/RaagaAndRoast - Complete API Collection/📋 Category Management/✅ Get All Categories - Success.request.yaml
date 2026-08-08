@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/categories?page=0&size=20&sort=name,asc"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  page: "0"
+  size: "20"
+  sort: name,asc
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has paginated categories", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          pm.expect(jsonData).to.have.property('totalElements');
+      });
+    language: text/javascript
+order: 2000

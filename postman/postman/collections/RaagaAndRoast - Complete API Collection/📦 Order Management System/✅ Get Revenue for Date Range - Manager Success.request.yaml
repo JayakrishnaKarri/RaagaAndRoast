@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders/analytics/revenue?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59"
+method: GET
+headers:
+  Authorization: Bearer {{managerToken}}
+queryParams:
+  startDate: 2024-01-01T00:00:00
+  endDate: 2024-12-31T23:59:59
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has revenue amount", function () {
+          var jsonData = pm.response.json();
+          pm.expect(typeof jsonData).to.equal('number');
+          pm.expect(jsonData).to.be.at.least(0);
+      });
+    language: text/javascript
+order: 26000

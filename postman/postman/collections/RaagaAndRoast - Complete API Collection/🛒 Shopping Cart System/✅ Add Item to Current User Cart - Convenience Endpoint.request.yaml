@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{baseUrl}}/api/cart/items"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "menuItemId": "{{menuItemId}}",
+        "quantity": 1
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Item added to cart", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('items');
+          pm.expect(jsonData.items.length).to.be.greaterThan(0);
+          
+          // Store cart item ID for subsequent requests
+          if (jsonData.items.length > 0) {
+              pm.environment.set('cartItemId', jsonData.items[0].id);
+          }
+      });
+    language: text/javascript
+order: 8000

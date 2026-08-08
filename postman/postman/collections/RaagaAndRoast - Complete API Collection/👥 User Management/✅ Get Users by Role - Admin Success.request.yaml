@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/by-role/CUSTOMER?page=0&size=10"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+queryParams:
+  page: "0"
+  size: "10"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has users with specified role", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          pm.expect(jsonData).to.have.property('totalElements');
+      });
+    language: text/javascript
+order: 15000

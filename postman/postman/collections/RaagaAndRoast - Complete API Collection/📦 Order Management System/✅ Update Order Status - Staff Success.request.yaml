@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders/{{orderId}}/status"
+method: PATCH
+headers:
+  Authorization: Bearer {{staffToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "status": "CONFIRMED"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Order status updated", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('status');
+          pm.expect(jsonData.status).to.equal('CONFIRMED');
+      });
+    language: text/javascript
+order: 4000

@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/profile"
+method: PUT
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "customer1updated@example.com",
+        "firstName": "John Updated",
+        "lastName": "Doe Updated"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Profile updated successfully", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('email');
+      });
+    language: text/javascript
+order: 9000

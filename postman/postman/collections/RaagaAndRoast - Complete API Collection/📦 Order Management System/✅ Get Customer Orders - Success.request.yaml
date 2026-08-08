@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders?page=0&size=20&sort=createdAt,desc"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  page: "0"
+  size: "20"
+  sort: createdAt,desc
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has paginated orders", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+          pm.expect(jsonData).to.have.property('totalElements');
+      });
+    language: text/javascript
+order: 2000

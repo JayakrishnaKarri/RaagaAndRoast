@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items/price-range?minPrice=10.00&maxPrice=5.00"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  minPrice: "10.00"
+  maxPrice: "5.00"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Response has error message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('message');
+      });
+    language: text/javascript
+order: 23000

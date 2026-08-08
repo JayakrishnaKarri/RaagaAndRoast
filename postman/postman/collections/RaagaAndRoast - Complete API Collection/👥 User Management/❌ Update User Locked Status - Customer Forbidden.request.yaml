@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/{{userId}}/locked?locked=true"
+method: PATCH
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  locked: "true"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 403", function () {
+          pm.response.to.have.status(403);
+      });
+    language: text/javascript
+order: 19000

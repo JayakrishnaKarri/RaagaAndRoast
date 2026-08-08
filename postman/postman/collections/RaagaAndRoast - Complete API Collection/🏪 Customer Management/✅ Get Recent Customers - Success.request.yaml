@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/recent?days=7"
+method: GET
+headers:
+  Authorization: Bearer {{staffToken}}
+queryParams:
+  days: "7"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has recent customers", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+      });
+    language: text/javascript
+order: 4000

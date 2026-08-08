@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders/{{orderId}}"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has order details", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('status');
+          pm.expect(jsonData).to.have.property('items');
+      });
+    language: text/javascript
+order: 3000

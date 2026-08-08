@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/addresses/geographic/area?city=New York&state=NY&radius=10"
+method: GET
+headers:
+  Authorization: Bearer {{staffToken}}
+queryParams:
+  city: New York
+  state: NY
+  radius: "10"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has geographic search results", function () {
+          var jsonData = pm.response.json();
+          pm.expect(Array.isArray(jsonData)).to.be.true;
+      });
+    language: text/javascript
+order: 16000

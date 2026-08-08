@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{baseUrl}}/api/categories"
+method: POST
+headers:
+  Authorization: Bearer {{managerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Beverages",
+        "description": "Hot and cold beverages including coffee, tea, and soft drinks",
+        "active": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has category data", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('name');
+          pm.expect(jsonData).to.have.property('active');
+          
+          // Store category ID for subsequent requests
+          pm.environment.set('categoryId', jsonData.id);
+      });
+    language: text/javascript
+order: 1000

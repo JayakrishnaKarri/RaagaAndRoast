@@ -1,0 +1,37 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "items": [
+            {
+                "menuItemId": "{{menuItemId}}",
+                "quantity": 2
+            }
+        ],
+        "deliveryAddressId": "{{addressId}}",
+        "notes": "Please make it extra hot"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Order created successfully", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('status');
+          pm.expect(jsonData).to.have.property('totalAmount');
+          
+          // Store order ID for subsequent requests
+          pm.environment.set('orderId', jsonData.id);
+      });
+    language: text/javascript
+order: 1000

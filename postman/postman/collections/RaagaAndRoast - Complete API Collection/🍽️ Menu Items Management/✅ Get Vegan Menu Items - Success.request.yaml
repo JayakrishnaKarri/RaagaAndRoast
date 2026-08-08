@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items/dietary?vegan=true&page=0&size=20"
+method: GET
+headers:
+  Authorization: Bearer {{customerToken}}
+queryParams:
+  vegan: "true"
+  page: "0"
+  size: "20"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has vegan items", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('content');
+      });
+    language: text/javascript
+order: 14000

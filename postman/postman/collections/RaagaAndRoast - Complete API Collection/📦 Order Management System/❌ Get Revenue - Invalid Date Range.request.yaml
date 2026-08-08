@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/api/orders/analytics/revenue?startDate=2024-12-31T23:59:59&endDate=2024-01-01T00:00:00"
+method: GET
+headers:
+  Authorization: Bearer {{managerToken}}
+queryParams:
+  startDate: 2024-12-31T23:59:59
+  endDate: 2024-01-01T00:00:00
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Response has error message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('message');
+      });
+    language: text/javascript
+order: 33000

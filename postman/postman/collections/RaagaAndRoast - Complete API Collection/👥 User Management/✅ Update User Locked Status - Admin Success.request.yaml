@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/{{userId}}/locked?locked=true"
+method: PATCH
+headers:
+  Authorization: Bearer {{adminToken}}
+queryParams:
+  locked: "true"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("User locked status updated", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('locked');
+      });
+    language: text/javascript
+order: 16000

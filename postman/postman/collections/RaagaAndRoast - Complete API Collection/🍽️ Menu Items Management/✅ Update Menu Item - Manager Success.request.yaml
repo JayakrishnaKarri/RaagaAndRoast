@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items/{{menuItemId}}"
+method: PUT
+headers:
+  Authorization: Bearer {{managerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Espresso Updated",
+        "description": "Updated rich and bold espresso shot",
+        "price": 3.49,
+        "categoryId": "{{categoryId}}",
+        "available": true,
+        "vegetarian": true,
+        "vegan": false,
+        "glutenFree": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Menu item updated successfully", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('name');
+          pm.expect(jsonData.description).to.include('Updated');
+      });
+    language: text/javascript
+order: 4000

@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items/{{menuItemId}}/toggle-availability"
+method: PATCH
+headers:
+  Authorization: Bearer {{managerToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Menu item availability toggled", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('available');
+      });
+    language: text/javascript
+order: 5000

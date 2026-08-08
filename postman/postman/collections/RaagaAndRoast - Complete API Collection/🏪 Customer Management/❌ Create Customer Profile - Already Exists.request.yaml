@@ -1,0 +1,29 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/profile"
+method: POST
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "firstName": "Duplicate",
+        "lastName": "Customer",
+        "phoneNumber": "+1234567890",
+        "dateOfBirth": "1990-01-15",
+        "marketingConsent": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 409", function () {
+          pm.response.to.have.status(409);
+      });
+
+      pm.test("Response has conflict message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.message).to.include('already exists');
+      });
+    language: text/javascript
+order: 25000

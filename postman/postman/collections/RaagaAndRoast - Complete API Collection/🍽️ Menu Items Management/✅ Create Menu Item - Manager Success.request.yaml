@@ -1,0 +1,38 @@
+$kind: http-request
+url: "{{baseUrl}}/api/menu-items"
+method: POST
+headers:
+  Authorization: Bearer {{managerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Espresso",
+        "description": "Rich and bold espresso shot",
+        "price": 2.99,
+        "categoryId": "{{categoryId}}",
+        "available": true,
+        "vegetarian": true,
+        "vegan": false,
+        "glutenFree": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has menu item data", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('id');
+          pm.expect(jsonData).to.have.property('name');
+          pm.expect(jsonData).to.have.property('price');
+          pm.expect(jsonData).to.have.property('available');
+          
+          // Store menu item ID for subsequent requests
+          pm.environment.set('menuItemId', jsonData.id);
+      });
+    language: text/javascript
+order: 1000

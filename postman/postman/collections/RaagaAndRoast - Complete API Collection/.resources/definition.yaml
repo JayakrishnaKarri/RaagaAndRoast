@@ -1,0 +1,16 @@
+$kind: collection
+description: Comprehensive API collection for RaagaAndRoast café ordering platform covering ALL endpoints with complete scenario testing including success, failure, validation, and security scenarios.
+variables:
+  baseUrl: http://localhost:8080
+  customerToken: ""
+  adminToken: ""
+  managerToken: ""
+  staffToken: ""
+  userId: ""
+  customerId: ""
+  categoryId: ""
+  menuItemId: ""
+  cartItemId: ""
+  orderId: ""
+  addressId: ""
+  refreshToken: ""

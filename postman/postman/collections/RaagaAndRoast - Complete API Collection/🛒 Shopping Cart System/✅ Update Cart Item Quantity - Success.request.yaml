@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{baseUrl}}/api/customers/{{customerId}}/cart/items/{{cartItemId}}"
+method: PATCH
+headers:
+  Authorization: Bearer {{customerToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "quantity": 3
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Cart item quantity updated", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('items');
+      });
+    language: text/javascript
+order: 3000
